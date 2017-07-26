@@ -1,93 +1,185 @@
-#include <LiquidCrystal.h>
-#include <idDHT11.h>
+#include "LiquidCrystal.h"
+#include "DHT.h"
+#define DHTTYPE DHT11
 
-int motorPin = 9;
+// analog pins
+int aPotiPin = 0;
+
+// digital pins
+int dDhtPin = 2;
+int dLcdContrastPin = 3;
+int dSwitchPin = 4;
+int dInletPin = 9;
+int dOutletPin = 10;
+
+// Thresholds
+int threshTemp = 25;
+int threshHumi = 40;
+
+boolean lastState = 0;
+int contrast = 0;
 int lcdbuf = 16;
-LiquidCrystal lcd(12, 11, 6, 5, 4, 3);
+int state = 0; // init the run state
+int potiVal = 0;
+unsigned long lastCheck = 0;
+unsigned long time = 0;
 
-void dht11_wrapper();
-idDHT11 DHT11(2, 0, dht11_wrapper); // pin, interrupt, callback
-// mapping pin to interrupt should be over: interrupt = digitalPinToInterrupt(pin)
+DHT dht(dDhtPin, DHTTYPE);
+LiquidCrystal lcd(11, 12, 5, 6, 7, 8);
 
 void setup() {
-  pinMode(motorPin, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Initialising automatic humidifier");
+  
+  pinMode(dInletPin, OUTPUT);
+  pinMode(dOutletPin, OUTPUT);
+  pinMode(dLcdContrastPin, OUTPUT);
+  pinMode(dSwitchPin, INPUT);
+  
+  // start the PWM signal with high contrast (low pwm value)
+  analogWrite(dLcdContrastPin, contrast);
+      
+  dht.begin();
   
   lcd.begin(lcdbuf, 2);
   lcd.print("Auto Humidifier");
   lcd.setCursor(0, 1);
   lcd.print("Initialising...");
-  Serial.begin(9600);
-  Serial.println("Initialising automatic humidifier");
   
   delay(2000);
   lcd.clear();
 }
 
-void dht11_wrapper() {
-  DHT11.isrCallback();
-}
-
 void loop() {
-  Serial.print("\nRetrieving information from sensor: ");
-  Serial.print("Read sensor: ");
-  //delay(100);
+  time = millis();
   
-  int result = DHT11.acquireAndWait();
-  switch (result) {
-    case IDDHTLIB_OK: 
-      Serial.println("OK"); 
+  // Normally we only check every ten seconds whether we need to start spraying water
+  if (abs(time - lastCheck) > 10000) {
+    checkAndSpray();
+    lastCheck = time;
+  }
+  // Check whether the user whishes to switch the state
+  boolean buttonPressed = debounceButton();
+  if (buttonPressed != lastState) {
+    lastState = buttonPressed; 
+    if (buttonPressed) {
+      state++;
+      if (state > 3) state = 0;
+      
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      if (state == 0) {
+        lcd.print("Run state: ");
+      } else if (state == 1) {
+      lcd.print("Set Temp threshold: ");
+      } else if (state == 2) {
+      lcd.print("Set Humidity threshold: ");
+      } else if (state == 3) {
+      lcd.print("Set Contrast threshold: ");
+      }
+      lcd.setCursor(12, 0);
+  
+      Serial.print("new state: ");
+      Serial.println(state);
+    }
+  }
+  
+  // if we are in one of the setting states, we read the poti value
+  if (state > 0) potiVal = readStablePotiValue();
+  switch(state) {
+    case 0: // run state
       break;
-    case IDDHTLIB_ERROR_CHECKSUM: 
-      Serial.println("Error\n\r\tChecksum error"); 
+    case 1: // humidity setting state
+    
+      lcd.setCursor(12, 0);
+      lcd.print(potiVal);
       break;
-    case IDDHTLIB_ERROR_ISR_TIMEOUT: 
-      Serial.println("Error\n\r\tISR time out error"); 
+    case 2: // temperature setting state
+      lcd.setCursor(12, 0);
+      lcd.print(potiVal);
       break;
-    case IDDHTLIB_ERROR_RESPONSE_TIMEOUT: 
-      Serial.println("Error\n\r\tResponse time out error"); 
-      break;
-    case IDDHTLIB_ERROR_DATA_TIMEOUT: 
-      Serial.println("Error\n\r\tData time out error"); 
-      break;
-    case IDDHTLIB_ERROR_ACQUIRING: 
-      Serial.println("Error\n\r\tAcquiring"); 
-      break;
-    case IDDHTLIB_ERROR_DELTA: 
-      Serial.println("Error\n\r\tDelta time to small"); 
-      break;
-    case IDDHTLIB_ERROR_NOTSTARTED: 
-      Serial.println("Error\n\r\tNot started"); 
-      break;
-    default: 
-      Serial.println("Unknown error"); 
+    case 3: // contrast setting state
+      lcd.setCursor(12, 0);
+      lcd.print(potiVal);
+      
+      analogWrite(dLcdContrastPin, potiVal);
       break;
   }
   
-  float humi = DHT11.getHumidity();
-  float temp = DHT11.getCelsius();
 
+//  delay(2000);
+  // we need to check often for the pressed switch button
+  delay(50);
+}
+
+boolean debounceButton() {
+  boolean state;
+  boolean previousState = digitalRead(dSwitchPin);
+  int i = 0;
+  // if we read 20 times the same value we are quite sure the button is stable
+  while (i < 20) {
+    delay(1);
+    state = digitalRead(dSwitchPin);
+    if (state != previousState) {
+      i = 0;
+      previousState = state;
+    }
+    i++;
+  }
+  return state;
+}
+
+void checkAndSpray() {
+  
+  Serial.print("\nRetrieving information from sensor: ");
+  Serial.print("Poti: ");
+  Serial.println(potiVal);
+//  Serial.print("Read sensor: ");
+  //delay(100);
+  
+  
+  float humi = dht.readHumidity();
+  float temp = dht.readTemperature();
+  if (isnan(humi) || isnan(temp)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+  
+  float hic = dht.computeHeatIndex(temp, humi, false);
+  /*
   lcd.setCursor(0, 0);
   lcd.print("Humidity: ");
   lcd.setCursor(12, 0);
   lcd.print(humi);
+  */
   Serial.print("Humidity (%): ");
   Serial.println(humi);
-  
+  /*
   lcd.setCursor(0, 1);
   lcd.print("Temp: ");
   lcd.setCursor(12, 1);
   lcd.print(temp);
+  */
   Serial.print("Temperature (°C): ");
   Serial.println(temp);
   
-  Serial.print("Dew Point (oC): ");
-  Serial.println(DHT11.getDewPoint());
-  
+  Serial.print("Heat Index (oC): ");
+  Serial.println(hic);
+  /*
   if(temp > 26 || humi > 36) {
-    digitalWrite(motorPin, HIGH);
+    digitalWrite(dInletPin, HIGH);
   } else {
-    digitalWrite(motorPin, LOW);
-  }
+    digitalWrite(dInletPin, LOW);
+  }*/
 
-  delay(2000);
+}
+
+// Returns a value between 0 and 100
+int readStablePotiValue() {
+  int res = 0;
+  for(int i = 0; i < 10; i++) {
+    res += analogRead(aPotiPin);
+    delay(1);
+  }
+  return res / 102.3; // poti values range from 0 to 1023
 }
