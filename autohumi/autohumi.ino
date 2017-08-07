@@ -29,6 +29,55 @@ unsigned long time = 0;
 DHT dht(dDhtPin, DHTTYPE);
 LiquidCrystal lcd(11, 12, 5, 6, 7, 8);
 
+
+/*
+#include <Arduino.h>
+#include <U8g2lib.h>
+#include <SPI.h>
+#include <Wire.h>
+
+char line1[14] = "Temperature:";
+char line2[14] = "  25 C";
+char line3[14] = "Humidity:";
+char line4[14] = "  25%";
+
+
+//  U8G2_R0  No rotation, landscape
+//  U8G2_R1 90 degree clockwise rotation
+//  U8G2_R2 180 degree clockwise rotation
+//  U8G2_R3 270 degree clockwise rotation
+//  U8G2_MIRROR No rotation, landscape, display content is mirrored (v2.6.x)
+
+
+U8G2_SSD1306_128X64_NONAME_1_SW_I2C u8g2(U8G2_R0, 19, 18);
+
+void setup(void) {
+  u8g2.begin();
+  line2[4] = (char)176;
+  
+  u8g2.firstPage();
+  do {
+    u8g2.setFont(u8g2_font_9x15_tf);
+    //    u8g2.setFont(u8g2_font_7x13_tf);
+    //    u8g2.setFont(u8g2_font_crox1t_tf);
+
+    u8g2.drawStr(0, 10, line1);
+    u8g2.drawStr(0, 25, line2);
+    u8g2.drawStr(0, 49, line3);
+    u8g2.drawStr(0, 64, line4);
+  } while ( u8g2.nextPage() );
+}
+
+void loop(void) {
+  
+  delay(500);
+}
+*/
+
+
+
+
+
 void setup() {
   Serial.begin(9600);
   Serial.println("Initialising automatic humidifier");
