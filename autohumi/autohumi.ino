@@ -17,66 +17,23 @@ int minTemp = 15;
 int maxTemp = 35;
 int threshTemp = 25;
 int threshHumi = 40;
-
+int sprayTime = 120;
 boolean lastState = 0;
-unsigned char contrast = 0; // [0 - 255]
-int lcdbuf = 16;
-int state = 0; // init the run state
-int potiVal = 0;
-unsigned long lastCheck = 0;
+// allowed values for contrast would be [0 - 255]
+// but since nothing can be seen above 75, we only use [0 - 75]
+unsigned char contrast = 0;
+int initialPotiVal;
+boolean potiChanged;
+byte appState = 0; // init the app state
+byte sprayState = 0; // init the spray state
+
+// times:
 unsigned long time = 0;
+unsigned long lastCheck = 0;
+unsigned long sprayStart = 0;
 
 DHT dht(dDhtPin, DHTTYPE);
 LiquidCrystal lcd(11, 12, 5, 6, 7, 8);
-
-
-/*
-#include <Arduino.h>
-#include <U8g2lib.h>
-#include <SPI.h>
-#include <Wire.h>
-
-char line1[14] = "Temperature:";
-char line2[14] = "  25 C";
-char line3[14] = "Humidity:";
-char line4[14] = "  25%";
-
-
-//  U8G2_R0  No rotation, landscape
-//  U8G2_R1 90 degree clockwise rotation
-//  U8G2_R2 180 degree clockwise rotation
-//  U8G2_R3 270 degree clockwise rotation
-//  U8G2_MIRROR No rotation, landscape, display content is mirrored (v2.6.x)
-
-
-U8G2_SSD1306_128X64_NONAME_1_SW_I2C u8g2(U8G2_R0, 19, 18);
-
-void setup(void) {
-  u8g2.begin();
-  line2[4] = (char)176;
-  
-  u8g2.firstPage();
-  do {
-    u8g2.setFont(u8g2_font_9x15_tf);
-    //    u8g2.setFont(u8g2_font_7x13_tf);
-    //    u8g2.setFont(u8g2_font_crox1t_tf);
-
-    u8g2.drawStr(0, 10, line1);
-    u8g2.drawStr(0, 25, line2);
-    u8g2.drawStr(0, 49, line3);
-    u8g2.drawStr(0, 64, line4);
-  } while ( u8g2.nextPage() );
-}
-
-void loop(void) {
-  
-  delay(500);
-}
-*/
-
-
-
-
 
 void setup() {
   Serial.begin(9600);
@@ -93,53 +50,73 @@ void setup() {
   analogWrite(dLcdContrastPin, contrast);
   dht.begin();
   
-  lcd.begin(lcdbuf, 2);
+  lcd.begin(16, 2);
   lcd.print("Auto Humidifier");
   lcd.setCursor(0, 1);
   lcd.print("Initialising...");
   
   delay(2000);
+  
+  lcd.clear();
+  lcd.print("Humidity: ");
+  lcd.setCursor(0, 1);
+  lcd.print("Temp: ");
+  checkAndSpray();
 }
 
 void loop() {
   time = millis();
-  
+  boolean stateSwitched = false;
   // Check whether the user whishes to switch the state
   boolean buttonPressed = debounceButton();
   if (buttonPressed != lastState) {
     lastState = buttonPressed; 
     if (buttonPressed) {
-      state++;
-      if (state > 3) state = 0;
-
+      stateSwitched = true;
+      appState++;
+      if (appState > 4) appState = 0;
       lcd.clear();
-      lcd.setCursor(0, 0);
-      if (state == 0) {
-        lcd.print("Humidity: ");
-        lcd.setCursor(0, 1);
-        lcd.print("Temp: ");
-      } else if (state == 1) {
-        lcd.print("Temp. threshold:");
-      } else if (state == 2) {
-        lcd.print("Humi. threshold:");
-      } else if (state == 3) {
-        lcd.print("Set Contrast:");
-      }
-  
-      Serial.print("new state: ");
-      Serial.println(state);
+      Serial.print("new appState: ");
+      Serial.println(appState);
     }
   }
   
-  // if we are in one of the setting states, we read the poti value
-  if (state > 0) {
+  lcd.setCursor(0, 0);
+  if (appState == 0) {
+    lcd.print("Humidity: ");
+    lcd.setCursor(0, 1);
+    lcd.print("Temp: ");
+  } else {
+    // if we are in one of the setting states, we read the poti value
     // potiVal will be [0 - 100]
     Serial.print("\nRetrieving information from poti: ");
-    potiVal = readStablePotiValue();
-    Serial.print("Poti: ");
+    
+    int potiVal = readStablePotiValue(); // [0 - 100]
     Serial.println(potiVal);
+
+    // we add a poti robustness of +/- 10% before we register new values
+    if (stateSwitched) {
+      initialPotiVal = potiVal;
+      potiChanged = false;
+    } else if (!potiChanged) {
+      if(abs(potiVal - initialPotiVal) > 10) {
+        potiChanged = true;
+      } else {
+        potiVal = initialPotiVal;
+      }
+    }
+    
+    if (appState == 1) {
+      lcd.print("Temp. threshold:");
+    } else if (appState == 2) {
+      lcd.print("Humi. threshold:");
+    } else if (appState == 3) {
+      lcd.print("Set Contrast:");
+    } else if (appState == 4) {
+      lcd.print("Set spray time:");
+    }
     lcd.setCursor(0, 1);
-    switch(state) {
+    switch (appState) {
       case 1: // humidity setting state
         threshHumi = potiVal;
         lcd.print(threshHumi);
@@ -149,16 +126,25 @@ void loop() {
         lcd.print(threshTemp);
         break;
       case 3: // contrast setting state
-        contrast = potiVal * 2.55;
+        contrast = potiVal * 0.75; // [0 - 75] are reasonable values
         lcd.print(contrast);
-        analogWrite(dLcdContrastPin, contrast);
+        analogWrite(dLcdContrastPin, 255 - contrast);
         break;
+      case 4: // Spray Duration Setting [60 - 600] seconds
+        sprayTime = 60 + potiVal * 5.4;
+        lcd.print(sprayTime);
+        break;
+      // case 4: // brightness setting state
+      //   brightness = potiVal * XYZ; // what are reasonable values?
+      //   lcd.print(brigthness);
+      //   analogWrite(dLcdBrightnessPin, 255 - contrast);
+      //   break;
     }
   }
     
   // Normally we only check every ten seconds whether we need to start spraying water
   // or if temperature and humidity are adjusted
-  if (state == 1 || state == 2 || abs(time - lastCheck) > 10000) {
+  if (stateSwitched || appState == 1 || appState == 2 || abs(time - lastCheck) > 10000) {
     checkAndSpray();
     lastCheck = time;
   }
@@ -168,11 +154,6 @@ void loop() {
 }
 
 void checkAndSpray() {
-  
-//  Serial.print("Read sensor: ");
-  //delay(100);
-  
-  
   float humi = dht.readHumidity();
   float temp = dht.readTemperature();
   if (isnan(humi) || isnan(temp)) {
@@ -180,13 +161,13 @@ void checkAndSpray() {
     return;
   }
   
-  if (state == 0) {
+  if (appState == 0) {
     lcd.setCursor(12, 0);
     lcd.print(humi);
     lcd.setCursor(12, 1);
     lcd.print(temp);
   }
-  float hic = dht.computeHeatIndex(temp, humi, false);
+  // float hic = dht.computeHeatIndex(temp, humi, false);
 
   Serial.print("Humidity (%): ");
   Serial.println(humi);
@@ -194,16 +175,32 @@ void checkAndSpray() {
   Serial.print("Temperature (°C): ");
   Serial.println(temp);
   
-  Serial.print("Heat Index (oC): ");
-  Serial.println(hic);
+  // Serial.print("Heat Index (oC): ");
+  // Serial.println(hic);
   
-  if(temp > threshTemp || humi > threshHumi) {
+  // if we are idle and the thresholds are crossed, we start spraying 
+  if(sprayState == 0 && (temp > threshTemp || humi > threshHumi)) {
     digitalWrite(dInletPin, HIGH);
-  } else {
+    sprayStart = time;
+    sprayState = 1;
+    Serial.println("New spray state: Spraying!");
+  
+  // if we are spraying and the time is over, we stop spraying and flush
+  } else if (sprayState == 1 && abs(time - sprayStart) > sprayTime * 1000) {
     digitalWrite(dInletPin, LOW);
+    digitalWrite(dOutletPin, HIGH);
+    sprayState = 2;
+    Serial.println("New spray state: Flushing!");
+
+  // we flush the pipeline for 30 seconds
+  } else if (sprayState == 2 && abs(time - sprayStart) > (sprayTime+30) * 1000) {
+    digitalWrite(dOutletPin, LOW);
+    sprayState = 0;
+    Serial.println("New spray state: Idle!");
   }
 }
 
+// Since the switches vibrate physically when used, we have to wait for an accurate value
 boolean debounceButton() {
   boolean state;
   boolean previousState = digitalRead(dSwitchPin);
@@ -220,6 +217,8 @@ boolean debounceButton() {
   return state;
 }
 
+// the poti value can vary largely, we try to flatten this a bit by
+// using an average over 10 measurements
 // Returns a value between 0 and 100
 int readStablePotiValue() {
   int res = 0;
@@ -229,5 +228,5 @@ int readStablePotiValue() {
     delay(1);
   }
   // poti values range from 0 to 1023 therefore the last 10 values correspond to 100
-  return res / num / 10.13;
+  return 100 - (res / num / 10.13); // we flip the value because of the poti direction (100 - ...)
 }
