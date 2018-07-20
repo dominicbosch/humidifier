@@ -10,13 +10,14 @@
 class Display {
   public:
     Display(int clockPin, int dataPin);
-    // writeLine(int num);
-    writeLine(int num, String txt);
-    // clearLine(int num);
+	writeString(int num, String txt);
+	writeString(int num, char *buffer);
+	writeUTF8(int num, String txt);
+	writeUTF8(int num, char *buffer);
     clear();
+    
   private:
   	U8X8_SSD1306_128X64_NONAME_SW_I2C *_u8x8;
-    virtual void f() {};
 };
 
 #endif

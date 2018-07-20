@@ -2,6 +2,7 @@
   Humidifier.cpp - Humidifier control
 */
 #include "Arduino.h"
+#include <DHT.h>
 #include "Humidifier.h"
 #include "Display.h"
 #include "InputSwitch.h"
@@ -12,25 +13,25 @@ Humidifier::Humidifier(int aPotiPin, int dDhtPin, int dSwitchPin, int dInletPin,
       int maxTemp, int threshTemp, int threshHumi, int sprayTime) {
 
   // Humidity & Temperatur sensor:
-  displ = new Display(dOledClockPin, dOledDataPin);
-  toggle = new InputSwitch(dSwitchPin);
-  inletSwitch = new OutputSwitch(dInletPin);
-  outletSwitch = new OutputSwitch(dOutletPin);
+  _displ = new Display(dOledClockPin, dOledDataPin);
+  _toggle = new InputSwitch(dSwitchPin);
+  _inletSwitch = new OutputSwitch(dInletPin);
+  _outletSwitch = new OutputSwitch(dOutletPin);
   
-  DHT dht(odDhtPin, DHTTYPE);
-  dht.begin();
+  
+  _dht = new DHT(dDhtPin, DHTTYPE);
+  _dht->begin();
   
   delay(2000);
-  displ.clear();
-  
-  readTempAndHumi();
-  printDHTonOLED();
-  displ.writeLine(3, "Watching...");
+  _displ->clear();
+
+  updateMeasurements();
+  _displ->writeLine(3, "Watching...");
 };
 
 Humidifier::loop() {
   nowTime = millis();
-  boolean stateSwitched = updateState();
+  bool stateSwitched = updateState();
 
   if (stateSwitched) printNewState();
   // All states except for the run state need to read the poti
@@ -38,9 +39,8 @@ Humidifier::loop() {
   
   // We check temperature and humidity every ten seconds
   if (stateSwitched || abs(nowTime - lastTempCheck) > 10000) {
-    readTempAndHumi();
+    updateMeasurements();
     checkSpray();
-    printDHTonOLED();
     lastTempCheck = nowTime;
 
   // we check spray state every half second if we are spraying or flushing
@@ -56,10 +56,10 @@ Humidifier::loop() {
 
 
 // Check whether the state button has been pressed
-boolean updateState() {
-  boolean stateSwitched = false;
+bool updateState() {
+  bool stateSwitched = false;
   // Check whether the user whishes to switch the state
-  boolean buttonState = toggle.getState();
+  bool buttonState = _toggle.getState();
   if (buttonState != lastState) {
     lastState = buttonState; 
     if (buttonState == 1) { // button is pressed
@@ -144,8 +144,8 @@ void updatePotiSetting() {
 }
 
 void readTempAndHumi() {
-  int humi = dht.readHumidity();
-  int temp = dht.readTemperature();
+  int humi = _dht.readHumidity();
+  int temp = _dht.readTemperature();
 
   if (isnan(humi) || isnan(temp)) {
     Serial.println("Failed to read from DHT sensor!");
@@ -202,4 +202,19 @@ int readStablePotiValue() {
   }
   // poti values range from 0 to 1023 therefore the last 10 values correspond to 100
   return 100 - (res / num / 10.13); // we flip the value because of the poti direction (100 - ...)
+}
+
+void updateMeasurements() {
+  readTempAndHumi();
+  printDHTonOLED();
+}
+
+void printDHTonOLED() {
+  char buffer[16] = "";
+  snprintf(buffer, "%3d°C now > %2d°C", temperature, threshTemp);
+  _displ.writeUTF8(0, buffer);
+  //_u8x8->drawUTF8(0, 0, oledLine);
+  snprintf(buffer, "%3d%%  now <%3d%%", humidity, threshHumi);
+  _displ.writeString(buffer)
+  // _u8x8->drawString(0, 1, oledLine);
 }

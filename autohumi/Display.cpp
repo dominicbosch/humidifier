@@ -38,12 +38,3 @@ Display::writeUTF8(int num, char *buffer) {
 	_u8x8->drawUTF8(0, num, buffer);
 };
 
-void printDHTonOLED() {
-	char buffer[16] = "";
-  snprintf(buffer, "%3d°C now > %2d°C", temperature, threshTemp);
-  writeUTF8(0, buffer);
-  //_u8x8->drawUTF8(0, 0, oledLine);
-  snprintf(buffer, "%3d%%  now <%3d%%", humidity, threshHumi);
-  writeString(buffer)
-  // _u8x8->drawString(0, 1, oledLine);
-}

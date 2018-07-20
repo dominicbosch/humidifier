@@ -25,13 +25,15 @@ class Humidifier {
     Humidifier(int aPotiPin=7, int dDhtPin=2, int dSwitchPin=4, int dInletPin=9,
     	int dOutletPin=10, int dOledClockPin=19, int dOledDataPin=18, int minTemp=10,
     	int maxTemp=40, int threshTemp=25, int threshHumi=40, int sprayTime=120);
-    void loop();
-   private:
 
-	Display *displ;
-	InputSwitch *toggle;
-	OutputSwitch *inletSwitch;
-	OutputSwitch *outletSwitch;
+    void loop();
+
+   private:
+	Display *_displ;
+	InputSwitch *_toggle;
+	OutputSwitch *_inletSwitch;
+	OutputSwitch *_outletSwitch;
+	DHT *_dht;
 
    	bool _lastToggleState = 0;
 	int _temperature = 0;
