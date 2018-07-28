@@ -23,11 +23,12 @@ class Humidifier {
 
     int _minTemp = 10;
     int _maxTemp = 40;
+    int _nowTemp = 10;
+    int _nowHumidity = 0;
+    int _lastTempCheck = 0;
 
-    void _updateMeasurements();
-    void _readTempAndHumi();
-    void _printDHTonOLED();
-    void _updateStateValue();
+    void _updateTempAndHumi();
+    void _updateSettingValue();
     int _readStablePotiValue();
 };
 

@@ -18,7 +18,7 @@ int AppState::updateState() {
     if (buttonState == InputSwitch::STATE_PRESSED) {
       stateSwitched = true;
       _appState++;
-      if (_appState > MAX_STATE) _appState = 0;
+      if (_appState > STATE_SET_TIMER) _appState = STATE_RUNNING;
     }
   }
   return stateSwitched;

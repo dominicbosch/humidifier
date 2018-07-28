@@ -1,5 +1,5 @@
 /*
-  SprayState.h - SprayState control
+	SprayState.h - SprayState control
 */
 #ifndef SprayState_h
 #define SprayState_h
@@ -19,6 +19,9 @@ class SprayState {
 			int sprayTime = 120, int sprayInterval = 300);
 		bool update(int temp, int humi);
 		String getStateText();
+		void setHumidityThresh(int newVal);
+		void setTemperatureThresh(int newVal);
+		void setSprayTime(int newVal);
 
 	private:
 		OutputSwitch *_inletSwitch;

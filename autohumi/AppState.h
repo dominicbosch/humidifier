@@ -13,7 +13,6 @@
 #define STATE_SET_HUMI 3
 #define STATE_SET_SPRAYTIME 4
 #define STATE_SET_TIMER 5
-#define MAX_STATE 5
 
 class AppState {
 	public:
@@ -25,8 +24,7 @@ class AppState {
 		InputSwitch *_toggle;
 
 		bool _lastToggleState = 0;
-		int _appState = 0; // init the app state
-
+		int _appState = 0;
 };
 
 #endif
