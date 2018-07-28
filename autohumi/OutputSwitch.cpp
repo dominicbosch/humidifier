@@ -8,3 +8,11 @@ OutputSwitch::OutputSwitch(int pin) {
   pinMode(pin, OUTPUT);
   _pin = pin;
 }
+
+OutputSwitch::on() {
+  digitalWrite(_pin, HIGH);
+}
+
+OutputSwitch::off() {
+  digitalWrite(_pin, LOW);
+}

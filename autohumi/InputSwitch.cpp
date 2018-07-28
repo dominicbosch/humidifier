@@ -4,6 +4,9 @@
 #include "Arduino.h"
 #include "InputSwitch.h"
 
+InputSwitch::STATE_RELEASED = 0;
+InputSwitch::STATE_PRESSED = 1;
+
 InputSwitch::InputSwitch(int pin) {
   pinMode(pin, INPUT);
   _pin = pin;

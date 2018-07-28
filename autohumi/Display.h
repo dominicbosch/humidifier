@@ -9,7 +9,7 @@
 
 class Display {
   public:
-    Display(int clockPin, int dataPin);
+    Display(int clockPin = 19, int dataPin = 18);
 	writeString(int num, String txt);
 	writeString(int num, char *buffer);
 	writeUTF8(int num, String txt);

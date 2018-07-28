@@ -9,6 +9,8 @@
 class OutputSwitch {
   public:
     OutputSwitch(int pin);
+    void on();
+    void off();
   private:
     int _pin;
 };
