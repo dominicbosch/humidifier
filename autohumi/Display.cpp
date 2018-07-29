@@ -23,18 +23,21 @@ void Display::clear() {
 // void Display::writeLine(int num) {
 //   _u8x8->drawUTF8(0, num, oledLines[num]);
 // };
-void Display::writeString(int num, String txt) {
-	char *buffer = &txt[0];
+
+// FIXME use char array: const char *s
+// void Display::writeString(int num, String txt) {
+// 	char *buffer = &txt[0];
+// 	_u8x8->drawString(0, num, buffer);
+// };
+void Display::writeString(int num, const char *buffer) {
 	_u8x8->drawString(0, num, buffer);
 };
-void Display::writeString(int num, char *buffer) {
-	_u8x8->drawString(0, num, buffer);
-};
-void Display::writeUTF8(int num, String txt) {
-	char *buffer = &txt[0];
-	_u8x8->drawUTF8(0, num, buffer);
-};
-void Display::writeUTF8(int num, char *buffer) {
+// FIXME use char array: const char *s
+// void Display::writeUTF8(int num, String txt) {
+// 	char *buffer = &txt[0];
+// 	_u8x8->drawUTF8(0, num, buffer);
+// };
+void Display::writeUTF8(int num, const char *buffer) {
 	_u8x8->drawUTF8(0, num, buffer);
 };
 

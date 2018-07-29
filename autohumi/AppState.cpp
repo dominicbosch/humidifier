@@ -24,15 +24,18 @@ int AppState::updateState() {
   return stateSwitched;
 }
 
-String AppState::getStateText() {
-  String text = "Unknown state...";
+int AppState::getState() { return _appState; }
+
+// FIXME use char array: const char *s
+char *AppState::getStateText() {
+  // char buffer[16] = "Unknown state..."; // FIXME, buffer needs to be declared by caller
   switch (_appState) {
-    case STATE_RUNNING: text = "AppState Active!"; break;
-    case STATE_SET_RUNMODE: text = "Set Run Mode!"; break;
-    case STATE_SET_TEMP: text = "Set Temperature!"; break;
-    case STATE_SET_HUMI: text = "Set Humidity!"; break;
-    case STATE_SET_SPRAYTIME: text = "Set Spray time!"; break;
-    case STATE_SET_TIMER: text = "Set Timer!"; break;
+    case STATE_RUNNING: strncpy(buffer, "Running State!"); break;
+    case STATE_SET_RUNMODE: strncpy(buffer, "Set Run Mode!"); break;
+    case STATE_SET_TEMP: strncpy(buffer, "Set Temperature!"); break;
+    case STATE_SET_HUMI: strncpy(buffer, "Set Humidity!"); break;
+    case STATE_SET_SPRAYTIME: strncpy(buffer, "Set Spray time!"); break;
+    case STATE_SET_TIMER: strncpy(buffer, "Set Timer!"); break;
   }
-  return text;
+  return buffer;
 }

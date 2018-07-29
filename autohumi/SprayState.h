@@ -18,9 +18,12 @@ class SprayState {
 			int threshTemp = 25, int threshHumi = 40,
 			int sprayTime = 120, int sprayInterval = 300);
 		bool update(int temp, int humi);
-		String getStateText();
-		void setHumidityThresh(int newVal);
-		void setTemperatureThresh(int newVal);
+		char *getStateText();
+		char *getCountdown();
+		int getHumiThresh();
+		void setHumiThresh(int newVal);
+		int getTempThresh();
+		void setTempThresh(int newVal);
 		void setSprayTime(int newVal);
 
 	private:
@@ -34,7 +37,6 @@ class SprayState {
 		int _sprayState = 0; // init the spray state
 
 		// times:
-		unsigned long _lastSprayCheck = 0;
 		unsigned long _sprayStart = 0;
 };
 

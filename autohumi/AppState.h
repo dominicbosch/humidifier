@@ -18,7 +18,10 @@ class AppState {
 	public:
 		AppState(int pinSwitch = 4);
 		int updateState();
-		String getStateText();
+		int getState();
+
+		// FIXME use char array: const char *s
+		char *getStateText();
 
 	private:
 		InputSwitch *_toggle;

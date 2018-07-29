@@ -10,10 +10,11 @@
 class Display {
   public:
     Display(int clockPin = 19, int dataPin = 18);
-    void writeString(int num, String txt);
-    void writeString(int num, char *buffer);
-    void writeUTF8(int num, String txt);
-    void writeUTF8(int num, char *buffer);
+	// FIXME use char array: const char *s
+    // void writeString(int num, String txt);
+    void writeString(int num, const char *buffer);
+    // void writeUTF8(int num, String txt);
+    void writeUTF8(int num, const char *buffer);
     void clear();
 
   private:
