@@ -43,20 +43,21 @@ void Humidifier::loop() {
 	// //_u8x8->drawUTF8(0, 0, oledLine);
 	// snprintf(buffer, "%3d%%  now <%3d%%", _nowHumidity, _threshHumi);
 	// _displ.writeString(1, buffer)
-	// // _u8x8->drawString(0, 1, oledLine);
+	// // _u8x8->writeString(0, 1, oledLine);
 	}
 
-	if (sprayState->update(_nowTemp, _nowHumidity)) {
+	if (_sprayState->update(_nowTemp, _nowHumidity)) {
 		// The spray state changed
-      _displ->drawString(3, sprayState->getStateText());
-      _displ->drawString(4, "");
+      _displ->writeString(3, _sprayState->getStateText());
+      _displ->writeString(4, "");
+			String buffer[16] = "";
 
 	    if (_sprayState == SPRAY_STATE_SPRAYING) {
-	      sprintf(oledLine, "Ends in %3ds", _sprayStart/1000 + _sprayTime - nowTime/1000);
-	      _displ->drawString(4, oledLine);
+	      sprintf(buffer, "Ends in %3ds", _sprayStart/1000 + _sprayTime - nowTime/1000);
+	      _displ->writeString(4, buffer);
 	    } else if (_sprayState == SPRAY_STATE_FLUSHING) {
-	      sprintf(oledLine, "Ends in %3ds", _sprayStart/1000 + (_sprayTime+30) - nowTime/1000);
-	      _displ->drawString(4, oledLine);
+	      sprintf(buffer, "Ends in %3ds", _sprayStart/1000 + (_sprayTime+30) - nowTime/1000);
+	      _displ->writeString(4, buffer);
 	    }
 	}
 
@@ -81,13 +82,6 @@ void Humidifier::_updateTempAndHumi() {
 		_lastTempCheck = nowTime;
 	}
 }
-
-// printVariable(int row, String form, int val) {
-// 	char buffer[16] = "";
-// 	snprintf(buffer, form, val);
-// 	_displ.writeString(row, buffer);
-// }
-
 
 void Humidifier::_updateSettingValue() {
 	// if we are in one of the setting states, we read the poti value
@@ -137,16 +131,6 @@ void Humidifier::_updateSettingValue() {
 				break;
 		}
 		_displ->drawUTF8(1, buffer);
-	}
-
-
-
-	if (_sprayState == SPRAY_STATE_SPRAYING) {
-		sprintf(oledLine, "Ends in %3ds", _sprayStart/1000 + _sprayTime - nowTime/1000);
-		_displ->drawString(4, oledLine);
-	} else if (_sprayState == SPRAY_STATE_FLUSHING) {
-		sprintf(oledLine, "Ends in %3ds", _sprayStart/1000 + (_sprayTime+30) - nowTime/1000);
-		_displ->drawString(4, oledLine);
 	}
 }
 

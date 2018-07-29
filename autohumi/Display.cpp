@@ -38,3 +38,10 @@ void Display::writeUTF8(int num, char *buffer) {
 	_u8x8->drawUTF8(0, num, buffer);
 };
 
+
+
+// printVariable(int row, String form, int val) {
+//  char buffer[16] = "";
+//  snprintf(buffer, form, val);
+//  _displ.writeString(row, buffer);
+// }
