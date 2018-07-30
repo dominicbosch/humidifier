@@ -5,6 +5,7 @@
 #define AppState_h
 
 #include "Arduino.h"
+#include "Display.h"
 #include "InputSwitch.h"
 
 #define STATE_RUNNING 0
@@ -16,14 +17,13 @@
 
 class AppState {
 	public:
-		AppState(int pinSwitch = 4);
+		AppState(Display *displ, int pinSwitch = 4);
 		int updateState();
 		int getState();
-
-		// FIXME use char array: const char *s
-		char *getStateText();
+		void printStateText(int line);
 
 	private:
+		Display *_displ;
 		InputSwitch *_toggle;
 
 		bool _lastToggleState = 0;

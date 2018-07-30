@@ -14,19 +14,21 @@
 
 class SprayState {
 	public:
-		SprayState(int dInletPin = 9, int dOutletPin = 10,
+		SprayState(Display *displ, int dInletPin = 9, int dOutletPin = 10,
 			int threshTemp = 25, int threshHumi = 40,
 			int sprayTime = 120, int sprayInterval = 300);
 		bool update(int temp, int humi);
-		char *getStateText();
-		char *getCountdown();
+		void printStateText(int line);
+		void printCountdown(int line);
 		int getHumiThresh();
 		void setHumiThresh(int newVal);
 		int getTempThresh();
 		void setTempThresh(int newVal);
+		int getSprayTime();
 		void setSprayTime(int newVal);
 
 	private:
+		Display *_displ;
 		OutputSwitch *_inletSwitch;
 		OutputSwitch *_outletSwitch;
 

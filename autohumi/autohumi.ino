@@ -8,6 +8,6 @@ void setup() {
 }
 
 void loop() {
-	app.loop();
+	app->loop();
 }
 

@@ -4,16 +4,13 @@
 #include "Arduino.h"
 #include "InputSwitch.h"
 
-InputSwitch::STATE_RELEASED = 0;
-InputSwitch::STATE_PRESSED = 1;
-
 InputSwitch::InputSwitch(int pin) {
   pinMode(pin, INPUT);
   _pin = pin;
 }
 
 // Since the switches vibrate physically when used, we have to wait for an accurate value
-InputSwitch::getState() {
+bool InputSwitch::getState() {
   bool state;
   bool previousState = digitalRead(_pin);
   int i = 0;

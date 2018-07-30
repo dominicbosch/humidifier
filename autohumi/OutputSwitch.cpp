@@ -9,10 +9,10 @@ OutputSwitch::OutputSwitch(int pin) {
   _pin = pin;
 }
 
-OutputSwitch::on() {
+void OutputSwitch::on() {
   digitalWrite(_pin, HIGH);
 }
 
-OutputSwitch::off() {
+void OutputSwitch::off() {
   digitalWrite(_pin, LOW);
 }

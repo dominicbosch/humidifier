@@ -12,8 +12,8 @@ Humidifier::Humidifier() {
 	Serial.println("Initialising automatic humidifier");
 
 	_displ = new Display();
-	_appState = new AppState();
-	_sprayState = new SprayState();
+	_appState = new AppState(_displ);
+	_sprayState = new SprayState(_displ);
 	
 	// Humidity & Temperatur sensor:
 	_dht = new DHT(2, DHTTYPE);
@@ -29,7 +29,7 @@ void Humidifier::loop() {
 	unsigned long nowTime = millis();
 
 	bool stateSwitched = _appState->updateState();
-	if (stateSwitched) _displ->writeString(0, _appState->getStateText());
+	if (stateSwitched) _appState->printStateText(0);
 
 	// We check temperature and humidity only every ten seconds
 	if (abs(nowTime - _lastTempCheck) > 10000) {
@@ -53,9 +53,11 @@ void Humidifier::loop() {
   if (abs(nowTime - _lastSprayCheck) > 500) {
 		if (_sprayState->update(_nowTemp, _nowHumidity)) {
 			// The spray state changed
-	    _displ->writeString(3, _sprayState->getStateText());
+	    _sprayState->printStateText(3);
+	    // _displ->writeString(3, _sprayState->getStateText());
 		}
-  	_displ->writeString(4, _sprayState->getCountdown());
+  	_sprayState->printCountdown(4);
+  	// _displ->writeString(4, _sprayState->getCountdown());
     _lastSprayCheck = nowTime;
   }
 
@@ -131,7 +133,7 @@ void Humidifier::_updateSettingValue() {
 			// analogWrite(dLcdContrastPin, 75 - contrast);
 			break;
 	}
-	_displ->drawUTF8(1, buffer);
+	_displ->writeUTF8(1, buffer);
 }
 
 // the poti value can vary largely, we try to flatten this a bit by

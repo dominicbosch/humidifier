@@ -13,6 +13,11 @@ Display::Display(int clockPin, int dataPin) {
   _u8x8->draw2x2String(0, 2, "Starting");
   _u8x8->draw2x2String(0, 4, "   up!");
 };
+char *Display::getLineBuffer(int line) {
+  if (line > LEN(_displayBuffer)-1) return NULL;
+  else return _displayBuffer[line];
+}
+
 void Display::clear() {
   _u8x8->clear();
   // memset(oledLines, "", sizeof(oledLines[0][0]*4*16));
