@@ -13,12 +13,10 @@
 class Display {
   public:
     Display(int clockPin = 19, int dataPin = 18);
-    char *getLineBuffer(int line);
-	// FIXME use char array: const char *s
-    // void writeString(int num, String txt);
-    void writeString(int num, const char *buffer);
-    // void writeUTF8(int num, String txt);
-    void writeUTF8(int num, const char *buffer);
+    char *getBufferLine(int line);
+    void printBufferLineAsString(int line);
+    void printBufferLineAsUTF8(int line);
+    void printString(int line, const char *buffer);
     void clear();
 
   private:

@@ -45,27 +45,25 @@ bool SprayState::update(int temperature, int humidity) {
   return hasChanged;
 }
 
-// FIXME use char array: const char *s
 void SprayState::printStateText(int line) {
-  char *buffer = _displ->getLineBuffer(line);
+  char *buffer = _displ->getBufferLine(line);
   switch (_sprayState) {
-    case SPRAY_STATE_SPRAYING: snprintf(buffer, "Spraying!", BUFFER_SIZE); break;
-    case SPRAY_STATE_FLUSHING: snprintf(buffer, "Flushing!", BUFFER_SIZE); break;
-    case SPRAY_STATE_OFF: snprintf(buffer, "Watching!", BUFFER_SIZE); break;
+    case SPRAY_STATE_SPRAYING: snprintf(buffer, BUFFER_SIZE, "Spraying!"); break;
+    case SPRAY_STATE_FLUSHING: snprintf(buffer, BUFFER_SIZE, "Flushing!"); break;
+    case SPRAY_STATE_OFF: snprintf(buffer, BUFFER_SIZE, "Watching!"); break;
   }
-  _displ->writeString(line, buffer);
+  _displ->printBufferLineAsString(line);
 }
 
-// FIXME use char array: const char *s
 void SprayState::printCountdown(int line) {
   unsigned long nowTime = millis();
-  char *buffer = _displ->getLineBuffer(line);
+  char *buffer = _displ->getBufferLine(line);
   if (_sprayState == SPRAY_STATE_SPRAYING) {
-    snprintf(buffer, "Ends in %3ds", _sprayStart/1000 + _sprayTime - nowTime/1000);
+    snprintf(buffer, BUFFER_SIZE, "Ends in %3ds", _sprayStart/1000 + _sprayTime - nowTime/1000);
   } else if (_sprayState == SPRAY_STATE_FLUSHING) {
-    snprintf(buffer, "Ends in %3ds", _sprayStart/1000 + (_sprayTime+30) - nowTime/1000);
+    snprintf(buffer, BUFFER_SIZE, "Ends in %3ds", _sprayStart/1000 + (_sprayTime+30) - nowTime/1000);
   }
-  _displ->writeString(line, buffer);
+  _displ->printBufferLineAsString(line);
 }
 
 int SprayState::getHumiThresh() { return _threshHumi; }

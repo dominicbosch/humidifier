@@ -13,43 +13,25 @@ Display::Display(int clockPin, int dataPin) {
   _u8x8->draw2x2String(0, 2, "Starting");
   _u8x8->draw2x2String(0, 4, "   up!");
 };
-char *Display::getLineBuffer(int line) {
+char *Display::getBufferLine(int line) {
   if (line > LEN(_displayBuffer)-1) return NULL;
   else return _displayBuffer[line];
 }
 
 void Display::clear() {
   _u8x8->clear();
-  // memset(oledLines, "", sizeof(oledLines[0][0]*4*16));
 };
 // void Display::clearLine(int num) {
 //   memset(oledLines[num], "", sizeof(oledLines[0][0]*16));
 // };
-// void Display::writeLine(int num) {
-//   _u8x8->drawUTF8(0, num, oledLines[num]);
-// };
 
-// FIXME use char array: const char *s
-// void Display::writeString(int num, String txt) {
-// 	char *buffer = &txt[0];
-// 	_u8x8->drawString(0, num, buffer);
-// };
-void Display::writeString(int num, const char *buffer) {
-	_u8x8->drawString(0, num, buffer);
+void Display::printString(int line, const char *buffer) {
+	_u8x8->drawString(0, line, buffer);
 };
-// FIXME use char array: const char *s
-// void Display::writeUTF8(int num, String txt) {
-// 	char *buffer = &txt[0];
-// 	_u8x8->drawUTF8(0, num, buffer);
-// };
-void Display::writeUTF8(int num, const char *buffer) {
-	_u8x8->drawUTF8(0, num, buffer);
+void Display::printBufferLineAsString(int line) {
+	_u8x8->drawString(0, line, _displayBuffer[line]);
+};
+void Display::printBufferLineAsUTF8(int line) {
+	_u8x8->drawUTF8(0, line, _displayBuffer[line]);
 };
 
-
-
-// printVariable(int row, String form, int val) {
-//  char buffer[16] = "";
-//  snprintf(buffer, form, val);
-//  _displ.writeString(row, buffer);
-// }

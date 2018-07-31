@@ -22,7 +22,7 @@ Humidifier::Humidifier() {
 	delay(2000);
 
 	_displ->clear();
-	_displ->writeString(3, "Watching...");
+	_displ->printString(3, "Watching...");
 }
 
 void Humidifier::loop() {
@@ -54,10 +54,8 @@ void Humidifier::loop() {
 		if (_sprayState->update(_nowTemp, _nowHumidity)) {
 			// The spray state changed
 	    _sprayState->printStateText(3);
-	    // _displ->writeString(3, _sprayState->getStateText());
 		}
   	_sprayState->printCountdown(4);
-  	// _displ->writeString(4, _sprayState->getCountdown());
     _lastSprayCheck = nowTime;
   }
 
@@ -79,24 +77,23 @@ void Humidifier::_updateTempAndHumi() {
 }
 
 void Humidifier::_printTempAndHumi() {
-	
-	// FIXME use char array: const char *s
-	char buffer[16] = "";
-	snprintf(buffer, "%3d°C now > %2d°C", _nowTemp, _sprayState->getTempThresh());
-	_displ->writeUTF8(0, buffer);
-	//_u8x8->drawUTF8(0, 0, oledLine);
-	snprintf(buffer, "%3d%%  now <%3d%%", _nowHumidity, _sprayState->getHumiThresh());
-	_displ->writeString(1, buffer);
-	// _u8x8->writeString(0, 1, oledLine);
+	char *buffer;
+
+	buffer = _displ->getBufferLine(0);
+	snprintf(buffer, BUFFER_SIZE, "%3d°C now > %2d°C", _nowTemp, _sprayState->getTempThresh());
+	_displ->printBufferLineAsUTF8(0);
+
+	*buffer = _displ->getBufferLine(1);
+	snprintf(buffer, BUFFER_SIZE, "%3d%%  now <%3d%%", _nowHumidity, _sprayState->getHumiThresh());
+	_displ->printBufferLineAsString(1);
 }
 
 bool Humidifier::_potiHasChanged(bool stateSwitched) {
-	// we add a poti robustness of +/- 10% before we register new values
-
 	if (stateSwitched) {
 		_initialPotiVal = _nowPoti;
 		_potiChanged = false;
 	} else if (!_potiChanged) {
+		// we add a poti robustness of +/- 5% before we register new values
 		if(abs(_nowPoti - _initialPotiVal) > 5) {
 			_potiChanged = true;
 		} else {
@@ -106,34 +103,34 @@ bool Humidifier::_potiHasChanged(bool stateSwitched) {
 }
 
 void Humidifier::_updateSettingValue() {
+	char *buffer = _displ->getBufferLine(1);
 	int newVal;
-	char buffer[16] = "";
 	switch (_appState->getState()) {
 		case STATE_SET_TEMP: // temperature setting state
 			newVal = _minTemp + (_maxTemp - _minTemp) * _nowPoti / 100;
 			_sprayState->setTempThresh(newVal);
-			snprintf(buffer, "Spray above %3d°C", newVal);
+			snprintf(buffer, BUFFER_SIZE, "Spray above %3d°C", newVal);
 			break;
 		case STATE_SET_HUMI: // humidity setting state
 			newVal = _nowPoti;
 			_sprayState->setHumiThresh(newVal);
-			snprintf(buffer, "Spray below %3d%%", newVal);
+			snprintf(buffer, BUFFER_SIZE, "Spray below %3d%%", newVal);
 			break;
 		case STATE_SET_SPRAYTIME: // Spray Duration Setting [60 - 600] seconds
 			newVal = 30 + _nowPoti * 5.7;
 			_sprayState->setSprayTime(newVal);
-			snprintf(buffer, "Spray every %3ds", newVal);
+			snprintf(buffer, BUFFER_SIZE, "Spray every %3ds", newVal);
 			// printLCD(_sprayTime, " seconds   ");
 			break;
 		case STATE_SET_TIMER: // set spray timer
 			// contrast = _nowPoti * 0.75; // [0 - 75] are reasonable values
 			// _sprayState->setTemperatureThreshold(newVal);
-			// snprintf(buffer, "Spray %3ds", _sprayTime);
+			// snprintf(buffer, BUFFER_SIZE, "Spray %3ds", _sprayTime);
 			// printLCD(_nowPoti, "%   ");
 			// analogWrite(dLcdContrastPin, 75 - contrast);
 			break;
 	}
-	_displ->writeUTF8(1, buffer);
+	_displ->printBufferLineAsUTF8(1);
 }
 
 // the poti value can vary largely, we try to flatten this a bit by

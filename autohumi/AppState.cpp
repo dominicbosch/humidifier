@@ -29,16 +29,15 @@ int AppState::updateState() {
 
 int AppState::getState() { return _appState; }
 
-// FIXME use char array: const char *s
 void AppState::printStateText(int line) {
-  // char buffer[16] = "Unknown state..."; // FIXME, buffer needs to be declared by caller
-  // switch (_appState) {
-  //   case STATE_RUNNING: strncpy(buffer, "Running State!"); break;
-  //   case STATE_SET_RUNMODE: strncpy(buffer, "Set Run Mode!"); break;
-  //   case STATE_SET_TEMP: strncpy(buffer, "Set Temperature!"); break;
-  //   case STATE_SET_HUMI: strncpy(buffer, "Set Humidity!"); break;
-  //   case STATE_SET_SPRAYTIME: strncpy(buffer, "Set Spray time!"); break;
-  //   case STATE_SET_TIMER: strncpy(buffer, "Set Timer!"); break;
-  // }
-  // return buffer;
+  char *buffer = _displ->getBufferLine(line);
+  switch (_appState) {
+    case STATE_RUNNING: snprintf(buffer, BUFFER_SIZE, "Running State!"); break;
+    case STATE_SET_RUNMODE: snprintf(buffer, BUFFER_SIZE, "Set Run Mode!"); break;
+    case STATE_SET_TEMP: snprintf(buffer, BUFFER_SIZE, "Set Temperature!"); break;
+    case STATE_SET_HUMI: snprintf(buffer, BUFFER_SIZE, "Set Humidity!"); break;
+    case STATE_SET_SPRAYTIME: snprintf(buffer, BUFFER_SIZE, "Set Spray time!"); break;
+    case STATE_SET_TIMER: snprintf(buffer, BUFFER_SIZE, "Set Timer!"); break;
+  }
+  _displ->printBufferLineAsString(line);
 }
