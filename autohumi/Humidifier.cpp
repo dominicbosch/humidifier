@@ -5,6 +5,9 @@
 #include "SprayState.h"
 #include "Display.h"
 
+#define UPDATE_SPRAY 100
+#define UPDATE_SENSOR 10000
+
 Humidifier::Humidifier() {
 
 	_displ = new Display();
@@ -18,51 +21,46 @@ Humidifier::Humidifier() {
 	delay(2000);
 
 	_displ->clear();
-	_displ->printString(3, "Watching...");
-	delay(2000);
-	_displ->printString(0, "Line 0");
-	_displ->printString(1, "Line 1");
-	_displ->printString(2, "Line 2");
-	_displ->printString(3, "Line 3");
-	_displ->printString(4, "Line 4");
-	_displ->printString(5, "Line 5");
-	_displ->printString(6, "Line 6");
-	_displ->printString(7, "Line 7");
+	_updateTempAndHumi();
+	_sprayState->printStateText(LINE_SPRAYSTATE);
+	_appState->printStateText(LINE_STATE);
 }
 
 void Humidifier::loop() {
 	unsigned long nowTime = millis();
 
 	bool stateSwitched = _appState->updateState();
-	if (stateSwitched) _appState->printStateText(LINE_STATE);
+	if (stateSwitched) {
+		_appState->printStateText(LINE_STATE);
+		_displ->clearBufferLine(LINE_SETTING);
+	}
 
 	// We check temperature and humidity only every ten seconds
-	if (abs(nowTime - _lastTempCheck) > 10000) {
+	if (abs(nowTime - _lastTempCheck) > UPDATE_SENSOR) {
 		_updateTempAndHumi();
 		_lastTempCheck = nowTime;
 	}
 
-	if (_appState > STATE_RUNNING) {
+	if (_appState->getState() > STATE_RUNNING) {
 		// All states except for the run state need to read the poti for a setting value
-
-		// if we are in one of the setting states, we read the poti value
-		int _nowPoti = _readStablePotiValue(); // [0 - 100]
-		if (_potiHasChanged(stateSwitched)) _updateSettingValue();
+		_nowPoti = _readStablePotiValue(); // [0 - 100]
+		_checkIfPotiChanged(stateSwitched);
+		if (_potiChanged) _updateSettingValue();
 	} else if (stateSwitched) {
 		// only the run state needs to print the current temp and humidity
 		_printTempAndHumi();
 	}
 
 
-  // we check spray state only every half second
-  if (abs(nowTime - _lastSprayCheck) > 500) {
+	// we check spray state only every half second
+	if (abs(nowTime - _lastSprayCheck) > UPDATE_SPRAY) {
 		if (_sprayState->update(_nowTemp, _nowHumidity)) {
 			// The spray state changed
-	    _sprayState->printStateText(LINE_SPRAYSTATE);
+			_sprayState->printStateText(LINE_SPRAYSTATE);
 		}
-  	_sprayState->printCountdown(LINE_SPRAYCOUNT);
-    _lastSprayCheck = nowTime;
-  }
+	_sprayState->printCountdown(LINE_SPRAYCOUNT);
+	_lastSprayCheck = nowTime;
+}
 
 	// we need to check often for the pressed switch button
 	delay(50);
@@ -76,9 +74,6 @@ void Humidifier::_updateTempAndHumi() {
 		Serial.println("Failed to read from DHT sensor!");
 		return;
 	}
-	Serial.println(humi);
-	Serial.println("%");
-	Serial.println(temp);
 	_nowHumidity = humi;
 	_nowTemp = temp;
 	_printTempAndHumi();
@@ -88,15 +83,15 @@ void Humidifier::_printTempAndHumi() {
 	char *buffer;
 
 	buffer = _displ->clearAndGetBufferLine(LINE_TEMP);
-	snprintf(buffer, BUFFER_LENGTH, "%3d°C now > %2d°C", _nowTemp, _sprayState->getTempThresh());
+	snprintf(buffer, BUFFER_LENGTH, "%3d°C >  %2d°C", _nowTemp, _sprayState->getTempThresh());
 	_displ->printBufferLineAsUTF8(LINE_TEMP);
 
 	buffer = _displ->clearAndGetBufferLine(LINE_HUMI);
-	snprintf(buffer, BUFFER_LENGTH, "%3d%%  now <%3d%%", _nowHumidity, _sprayState->getHumiThresh());
+	snprintf(buffer, BUFFER_LENGTH, "%3d%%  < %3d%%", _nowHumidity, _sprayState->getHumiThresh());
 	_displ->printBufferLineAsString(LINE_HUMI);
 }
 
-bool Humidifier::_potiHasChanged(bool stateSwitched) {
+void Humidifier::_checkIfPotiChanged(bool stateSwitched) {
 	if (stateSwitched) {
 		_initialPotiVal = _nowPoti;
 		_potiChanged = false;
@@ -111,31 +106,42 @@ bool Humidifier::_potiHasChanged(bool stateSwitched) {
 }
 
 void Humidifier::_updateSettingValue() {
+	Serial.println("Updating state");
 	char *buffer = _displ->clearAndGetBufferLine(LINE_SETTING);
 	int newVal;
+
 	switch (_appState->getState()) {
 		case STATE_SET_TEMP: // temperature setting state
 			newVal = _minTemp + (_maxTemp - _minTemp) * _nowPoti / 100;
 			_sprayState->setTempThresh(newVal);
-			snprintf(buffer, BUFFER_LENGTH, "Spray above %3d°C", newVal);
+			snprintf(buffer, BUFFER_LENGTH, "Spray > %3d°C", newVal);
+			_printTempAndHumi();
 			break;
 		case STATE_SET_HUMI: // humidity setting state
 			newVal = _nowPoti;
 			_sprayState->setHumiThresh(newVal);
-			snprintf(buffer, BUFFER_LENGTH, "Spray below %3d%%", newVal);
+			snprintf(buffer, BUFFER_LENGTH, "Spray < %3d%%", newVal);
+			_printTempAndHumi();
 			break;
 		case STATE_SET_SPRAYTIME: // Spray Duration Setting [60 - 600] seconds
 			newVal = 30 + _nowPoti * 5.7;
 			_sprayState->setSprayTime(newVal);
-			snprintf(buffer, BUFFER_LENGTH, "Spray every %3ds", newVal);
+			snprintf(buffer, BUFFER_LENGTH, "Spray %3ds", newVal);
 			// printLCD(_sprayTime, " seconds   ");
 			break;
+		case STATE_SET_RUNMODE: // run by sensor or timer
+			_runMode = (_nowPoti < 50) ? 0 : 1;
+			if (_nowPoti < 50) {
+				_runMode = 0;
+				snprintf(buffer, BUFFER_LENGTH, "Sensor Mode");
+			} else {
+				_runMode = 1;
+				snprintf(buffer, BUFFER_LENGTH, "Timer Mode");
+			}
+			break;
 		case STATE_SET_TIMER: // set spray timer
-			// contrast = _nowPoti * 0.75; // [0 - 75] are reasonable values
-			// _sprayState->setTemperatureThreshold(newVal);
-			// snprintf(buffer, BUFFER_LENGTH, "Spray %3ds", _sprayTime);
-			// printLCD(_nowPoti, "%   ");
-			// analogWrite(dLcdContrastPin, 75 - contrast);
+			_nowTimer = _minTimer + (_maxTimer - _minTimer) * _nowPoti / 100;
+			snprintf(buffer, BUFFER_LENGTH, "Spray every %3ds", _nowTimer);
 			break;
 	}
 	_displ->printBufferLineAsUTF8(LINE_SETTING);

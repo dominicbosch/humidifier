@@ -32,7 +32,7 @@ int AppState::getState() { return _state; }
 void AppState::printStateText(int line) {
   char *buffer = _displ->clearAndGetBufferLine(line);
   switch (_state) {
-    case STATE_RUNNING: snprintf(buffer, BUFFER_LENGTH, "Running State!"); break;
+    case STATE_RUNNING: snprintf(buffer, BUFFER_LENGTH, "Run Mode..."); break;
     case STATE_SET_RUNMODE: snprintf(buffer, BUFFER_LENGTH, "Set Run Mode!"); break;
     case STATE_SET_TEMP: snprintf(buffer, BUFFER_LENGTH, "Set Temperature!"); break;
     case STATE_SET_HUMI: snprintf(buffer, BUFFER_LENGTH, "Set Humidity!"); break;

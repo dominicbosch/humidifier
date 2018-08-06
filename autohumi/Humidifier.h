@@ -14,10 +14,10 @@
 
 #define LINE_TEMP 0
 #define LINE_HUMI 1
-#define LINE_STATE 3
-#define LINE_SETTING 4
-#define LINE_SPRAYSTATE 6
-#define LINE_SPRAYCOUNT 7
+#define LINE_SPRAYSTATE 3
+#define LINE_SPRAYCOUNT 4
+#define LINE_STATE 6
+#define LINE_SETTING 7
 
 class Humidifier {
   public:
@@ -30,10 +30,14 @@ class Humidifier {
     AppState *_appState;
     SprayState *_sprayState;
 
+    bool _runMode = 0;
     int _minTemp = 10;
     int _maxTemp = 40;
     int _nowTemp = 10;
     int _nowHumidity = 0;
+    int _minTimer = 30;
+    int _nowTimer = 120;
+    int _maxTimer = 600;
     int _nowPoti = 0;
     int _aPotiPin = 7;
     bool _potiChanged = 0;
@@ -43,7 +47,7 @@ class Humidifier {
 
     void _updateTempAndHumi();
     void _printTempAndHumi();
-    bool _potiHasChanged(bool stateSwitched);
+    void _checkIfPotiChanged(bool stateSwitched);
     void _updateSettingValue();
     int _readStablePotiValue();
 };

@@ -50,7 +50,7 @@ void SprayState::printStateText(int line) {
   switch (_sprayState) {
     case SPRAY_STATE_SPRAYING: snprintf(buffer, BUFFER_LENGTH, "Spraying!"); break;
     case SPRAY_STATE_FLUSHING: snprintf(buffer, BUFFER_LENGTH, "Flushing!"); break;
-    case SPRAY_STATE_OFF: snprintf(buffer, BUFFER_LENGTH, "Watching!"); break;
+    case SPRAY_STATE_OFF: snprintf(buffer, BUFFER_LENGTH, "Checking Sensors"); break;
   }
   _displ->printBufferLineAsString(line);
 }
