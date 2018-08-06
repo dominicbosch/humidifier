@@ -5,31 +5,36 @@
 #include "SprayState.h"
 #include "Display.h"
 
-#define DHTTYPE DHT11
-
 Humidifier::Humidifier() {
-	Serial.begin(9600);
-	Serial.println("Initialising automatic humidifier");
 
 	_displ = new Display();
 	_appState = new AppState(_displ);
 	_sprayState = new SprayState(_displ);
 	
 	// Humidity & Temperatur sensor:
-	_dht = new DHT(2, DHTTYPE);
+	_dht = new DHT(2, DHTTYPE); // Digital Pin D2
 	_dht->begin();
 	
 	delay(2000);
 
 	_displ->clear();
 	_displ->printString(3, "Watching...");
+	delay(2000);
+	_displ->printString(0, "Line 0");
+	_displ->printString(1, "Line 1");
+	_displ->printString(2, "Line 2");
+	_displ->printString(3, "Line 3");
+	_displ->printString(4, "Line 4");
+	_displ->printString(5, "Line 5");
+	_displ->printString(6, "Line 6");
+	_displ->printString(7, "Line 7");
 }
 
 void Humidifier::loop() {
 	unsigned long nowTime = millis();
 
 	bool stateSwitched = _appState->updateState();
-	if (stateSwitched) _appState->printStateText(0);
+	if (stateSwitched) _appState->printStateText(LINE_STATE);
 
 	// We check temperature and humidity only every ten seconds
 	if (abs(nowTime - _lastTempCheck) > 10000) {
@@ -53,9 +58,9 @@ void Humidifier::loop() {
   if (abs(nowTime - _lastSprayCheck) > 500) {
 		if (_sprayState->update(_nowTemp, _nowHumidity)) {
 			// The spray state changed
-	    _sprayState->printStateText(3);
+	    _sprayState->printStateText(LINE_SPRAYSTATE);
 		}
-  	_sprayState->printCountdown(4);
+  	_sprayState->printCountdown(LINE_SPRAYCOUNT);
     _lastSprayCheck = nowTime;
   }
 
@@ -71,6 +76,9 @@ void Humidifier::_updateTempAndHumi() {
 		Serial.println("Failed to read from DHT sensor!");
 		return;
 	}
+	Serial.println(humi);
+	Serial.println("%");
+	Serial.println(temp);
 	_nowHumidity = humi;
 	_nowTemp = temp;
 	_printTempAndHumi();
@@ -79,13 +87,13 @@ void Humidifier::_updateTempAndHumi() {
 void Humidifier::_printTempAndHumi() {
 	char *buffer;
 
-	buffer = _displ->getBufferLine(0);
-	snprintf(buffer, BUFFER_SIZE, "%3d°C now > %2d°C", _nowTemp, _sprayState->getTempThresh());
-	_displ->printBufferLineAsUTF8(0);
+	buffer = _displ->clearAndGetBufferLine(LINE_TEMP);
+	snprintf(buffer, BUFFER_LENGTH, "%3d°C now > %2d°C", _nowTemp, _sprayState->getTempThresh());
+	_displ->printBufferLineAsUTF8(LINE_TEMP);
 
-	*buffer = _displ->getBufferLine(1);
-	snprintf(buffer, BUFFER_SIZE, "%3d%%  now <%3d%%", _nowHumidity, _sprayState->getHumiThresh());
-	_displ->printBufferLineAsString(1);
+	buffer = _displ->clearAndGetBufferLine(LINE_HUMI);
+	snprintf(buffer, BUFFER_LENGTH, "%3d%%  now <%3d%%", _nowHumidity, _sprayState->getHumiThresh());
+	_displ->printBufferLineAsString(LINE_HUMI);
 }
 
 bool Humidifier::_potiHasChanged(bool stateSwitched) {
@@ -103,34 +111,34 @@ bool Humidifier::_potiHasChanged(bool stateSwitched) {
 }
 
 void Humidifier::_updateSettingValue() {
-	char *buffer = _displ->getBufferLine(1);
+	char *buffer = _displ->clearAndGetBufferLine(LINE_SETTING);
 	int newVal;
 	switch (_appState->getState()) {
 		case STATE_SET_TEMP: // temperature setting state
 			newVal = _minTemp + (_maxTemp - _minTemp) * _nowPoti / 100;
 			_sprayState->setTempThresh(newVal);
-			snprintf(buffer, BUFFER_SIZE, "Spray above %3d°C", newVal);
+			snprintf(buffer, BUFFER_LENGTH, "Spray above %3d°C", newVal);
 			break;
 		case STATE_SET_HUMI: // humidity setting state
 			newVal = _nowPoti;
 			_sprayState->setHumiThresh(newVal);
-			snprintf(buffer, BUFFER_SIZE, "Spray below %3d%%", newVal);
+			snprintf(buffer, BUFFER_LENGTH, "Spray below %3d%%", newVal);
 			break;
 		case STATE_SET_SPRAYTIME: // Spray Duration Setting [60 - 600] seconds
 			newVal = 30 + _nowPoti * 5.7;
 			_sprayState->setSprayTime(newVal);
-			snprintf(buffer, BUFFER_SIZE, "Spray every %3ds", newVal);
+			snprintf(buffer, BUFFER_LENGTH, "Spray every %3ds", newVal);
 			// printLCD(_sprayTime, " seconds   ");
 			break;
 		case STATE_SET_TIMER: // set spray timer
 			// contrast = _nowPoti * 0.75; // [0 - 75] are reasonable values
 			// _sprayState->setTemperatureThreshold(newVal);
-			// snprintf(buffer, BUFFER_SIZE, "Spray %3ds", _sprayTime);
+			// snprintf(buffer, BUFFER_LENGTH, "Spray %3ds", _sprayTime);
 			// printLCD(_nowPoti, "%   ");
 			// analogWrite(dLcdContrastPin, 75 - contrast);
 			break;
 	}
-	_displ->printBufferLineAsUTF8(1);
+	_displ->printBufferLineAsUTF8(LINE_SETTING);
 }
 
 // the poti value can vary largely, we try to flatten this a bit by

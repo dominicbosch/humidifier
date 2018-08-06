@@ -4,7 +4,9 @@
 #ifndef Display_h
 #define Display_h
 
-#define BUFFER_SIZE 16
+#define BUFFER_LENGTH 16
+#define BUFFER_HEIGHT 8
+
 #define LEN(arr) ((int) (sizeof (arr) / sizeof (arr)[0]))
 
 #include "Arduino.h"
@@ -13,7 +15,7 @@
 class Display {
   public:
     Display(int clockPin = 19, int dataPin = 18);
-    char *getBufferLine(int line);
+    char *clearAndGetBufferLine(int line);
     void printBufferLineAsString(int line);
     void printBufferLineAsUTF8(int line);
     void printString(int line, const char *buffer);
@@ -21,7 +23,7 @@ class Display {
 
   private:
     U8X8_SSD1306_128X64_NONAME_SW_I2C *_u8x8;
-    char _displayBuffer[4][BUFFER_SIZE] = {{""}};
+    char _displayBuffer[BUFFER_HEIGHT][BUFFER_LENGTH] = {{""}};
 };
 
 #endif

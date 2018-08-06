@@ -13,9 +13,12 @@ Display::Display(int clockPin, int dataPin) {
   _u8x8->draw2x2String(0, 2, "Starting");
   _u8x8->draw2x2String(0, 4, "   up!");
 };
-char *Display::getBufferLine(int line) {
-  if (line > LEN(_displayBuffer)-1) return NULL;
-  else return _displayBuffer[line];
+char *Display::clearAndGetBufferLine(int line) {
+  if (line >= BUFFER_HEIGHT) return NULL;
+  else {
+    memset(_displayBuffer[line], ' ', BUFFER_LENGTH);
+    return _displayBuffer[line];
+  }
 }
 
 void Display::clear() {

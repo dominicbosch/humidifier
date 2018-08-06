@@ -20,24 +20,24 @@ int AppState::updateState() {
     _lastToggleState = buttonState; 
     if (buttonState == InputSwitch::STATE_PRESSED) {
       stateSwitched = true;
-      _appState++;
-      if (_appState > STATE_SET_TIMER) _appState = STATE_RUNNING;
+      _state++;
+      if (_state > STATE_SET_TIMER) _state = STATE_RUNNING;
     }
   }
   return stateSwitched;
 }
 
-int AppState::getState() { return _appState; }
+int AppState::getState() { return _state; }
 
 void AppState::printStateText(int line) {
-  char *buffer = _displ->getBufferLine(line);
-  switch (_appState) {
-    case STATE_RUNNING: snprintf(buffer, BUFFER_SIZE, "Running State!"); break;
-    case STATE_SET_RUNMODE: snprintf(buffer, BUFFER_SIZE, "Set Run Mode!"); break;
-    case STATE_SET_TEMP: snprintf(buffer, BUFFER_SIZE, "Set Temperature!"); break;
-    case STATE_SET_HUMI: snprintf(buffer, BUFFER_SIZE, "Set Humidity!"); break;
-    case STATE_SET_SPRAYTIME: snprintf(buffer, BUFFER_SIZE, "Set Spray time!"); break;
-    case STATE_SET_TIMER: snprintf(buffer, BUFFER_SIZE, "Set Timer!"); break;
+  char *buffer = _displ->clearAndGetBufferLine(line);
+  switch (_state) {
+    case STATE_RUNNING: snprintf(buffer, BUFFER_LENGTH, "Running State!"); break;
+    case STATE_SET_RUNMODE: snprintf(buffer, BUFFER_LENGTH, "Set Run Mode!"); break;
+    case STATE_SET_TEMP: snprintf(buffer, BUFFER_LENGTH, "Set Temperature!"); break;
+    case STATE_SET_HUMI: snprintf(buffer, BUFFER_LENGTH, "Set Humidity!"); break;
+    case STATE_SET_SPRAYTIME: snprintf(buffer, BUFFER_LENGTH, "Set Spray time!"); break;
+    case STATE_SET_TIMER: snprintf(buffer, BUFFER_LENGTH, "Set Timer!"); break;
   }
   _displ->printBufferLineAsString(line);
 }

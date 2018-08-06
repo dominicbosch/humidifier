@@ -3,7 +3,7 @@
 
 Disp::Disp() {}
 
-char *Disp::getBufferLine(int line) {
+char *Disp::clearAndGetBufferLine(int line) {
 	return _buffer[line];
 }
 

@@ -27,7 +27,7 @@ class AppState {
 		InputSwitch *_toggle;
 
 		bool _lastToggleState = 0;
-		int _appState = 0;
+		int _state = 0;
 };
 
 #endif

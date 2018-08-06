@@ -10,6 +10,15 @@
 #include "SprayState.h"
 #include "Display.h"
 
+#define DHTTYPE DHT11
+
+#define LINE_TEMP 0
+#define LINE_HUMI 1
+#define LINE_STATE 3
+#define LINE_SETTING 4
+#define LINE_SPRAYSTATE 6
+#define LINE_SPRAYCOUNT 7
+
 class Humidifier {
   public:
     Humidifier();

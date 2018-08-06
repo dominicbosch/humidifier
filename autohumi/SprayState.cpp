@@ -46,22 +46,22 @@ bool SprayState::update(int temperature, int humidity) {
 }
 
 void SprayState::printStateText(int line) {
-  char *buffer = _displ->getBufferLine(line);
+  char *buffer = _displ->clearAndGetBufferLine(line);
   switch (_sprayState) {
-    case SPRAY_STATE_SPRAYING: snprintf(buffer, BUFFER_SIZE, "Spraying!"); break;
-    case SPRAY_STATE_FLUSHING: snprintf(buffer, BUFFER_SIZE, "Flushing!"); break;
-    case SPRAY_STATE_OFF: snprintf(buffer, BUFFER_SIZE, "Watching!"); break;
+    case SPRAY_STATE_SPRAYING: snprintf(buffer, BUFFER_LENGTH, "Spraying!"); break;
+    case SPRAY_STATE_FLUSHING: snprintf(buffer, BUFFER_LENGTH, "Flushing!"); break;
+    case SPRAY_STATE_OFF: snprintf(buffer, BUFFER_LENGTH, "Watching!"); break;
   }
   _displ->printBufferLineAsString(line);
 }
 
 void SprayState::printCountdown(int line) {
   unsigned long nowTime = millis();
-  char *buffer = _displ->getBufferLine(line);
+  char *buffer = _displ->clearAndGetBufferLine(line);
   if (_sprayState == SPRAY_STATE_SPRAYING) {
-    snprintf(buffer, BUFFER_SIZE, "Ends in %3ds", _sprayStart/1000 + _sprayTime - nowTime/1000);
+    snprintf(buffer, BUFFER_LENGTH, "Ends in %3ds", _sprayStart/1000 + _sprayTime - nowTime/1000);
   } else if (_sprayState == SPRAY_STATE_FLUSHING) {
-    snprintf(buffer, BUFFER_SIZE, "Ends in %3ds", _sprayStart/1000 + (_sprayTime+30) - nowTime/1000);
+    snprintf(buffer, BUFFER_LENGTH, "Ends in %3ds", _sprayStart/1000 + (_sprayTime+30) - nowTime/1000);
   }
   _displ->printBufferLineAsString(line);
 }
