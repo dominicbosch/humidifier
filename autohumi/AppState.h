@@ -20,7 +20,7 @@ class AppState {
 		AppState(Display *displ, int pinSwitch = 4);
 		int updateState();
 		int getState();
-		void printStateText(int line);
+		void printStateText(int line, const char *runmode = "");
 
 	private:
 		Display *_displ;

@@ -22,8 +22,15 @@ bool SprayState::update(int temperature, int humidity) {
   unsigned long nowTime = millis();
   bool hasChanged = false;
 
+  bool startSpray = false;
+  if (_runMode == RUNMODE_SENSOR) {
+    startSpray = (temperature > _threshTemp || humidity < _threshHumi);
+  } else {
+    startSpray = (abs(nowTime - _sprayStart)/1000 > _sprayInterval);
+  }
+
   // if we are idle and the thresholds are crossed, we start spraying 
-  if (_sprayState == SPRAY_STATE_OFF && (temperature > _threshTemp || humidity < _threshHumi)) {
+  if (_sprayState == SPRAY_STATE_OFF && startSpray) {
     _inletSwitch->on();
     _sprayStart = nowTime;
     _sprayState = SPRAY_STATE_SPRAYING;
@@ -66,6 +73,11 @@ void SprayState::printCountdown(int line) {
   _displ->printBufferLineAsString(line);
 }
 
+void SprayState::setRunMode(bool runMode) {
+  _runMode = runMode;
+}
+
+
 int SprayState::getHumiThresh() { return _threshHumi; }
 void SprayState::setHumiThresh(int newVal) { _threshHumi = newVal; }
 
@@ -74,4 +86,7 @@ void SprayState::setTempThresh(int newVal) { _threshTemp = newVal; }
 
 int SprayState::getSprayTime() { return _sprayTime; }
 void SprayState::setSprayTime(int newVal) { _sprayTime = newVal; }
+
+int SprayState::getSprayInterval() { return _sprayInterval; }
+void SprayState::setSprayInterval(int newVal) { _sprayInterval = newVal; }
 

@@ -31,14 +31,20 @@ void Humidifier::loop() {
 
 	bool stateSwitched = _appState->updateState();
 	if (stateSwitched) {
-		_appState->printStateText(LINE_STATE);
+		if (_runMode == RUNMODE_SENSOR) {
+			_appState->printStateText(LINE_STATE, "Sensor Mode...");
+		} else {
+			_appState->printStateText(LINE_STATE, "Timer Mode...");
+		}
 		_displ->clearBufferLine(LINE_SETTING);
 	}
 
-	// We check temperature and humidity only every ten seconds
-	if (abs(nowTime - _lastTempCheck) > UPDATE_SENSOR) {
-		_updateTempAndHumi();
-		_lastTempCheck = nowTime;
+	if (_runMode == RUNMODE_SENSOR) {
+		// We check temperature and humidity only every ten seconds
+		if (abs(nowTime - _lastTempCheck) > UPDATE_SENSOR) {
+			_updateTempAndHumi();
+			_lastTempCheck = nowTime;
+		}
 	}
 
 	if (_appState->getState() > STATE_RUNNING) {
@@ -138,10 +144,12 @@ void Humidifier::_updateSettingValue() {
 				_runMode = 1;
 				snprintf(buffer, BUFFER_LENGTH, "Timer Mode");
 			}
+			_sprayState->setRunMode(_runMode);
 			break;
 		case STATE_SET_TIMER: // set spray timer
 			_nowTimer = _minTimer + (_maxTimer - _minTimer) * _nowPoti / 100;
 			snprintf(buffer, BUFFER_LENGTH, "Spray every %3ds", _nowTimer);
+			_sprayState->setSprayInterval(_nowTimer);
 			break;
 	}
 	_displ->printBufferLineAsUTF8(LINE_SETTING);

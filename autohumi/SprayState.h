@@ -12,6 +12,9 @@
 #define SPRAY_STATE_SPRAYING 1
 #define SPRAY_STATE_FLUSHING 2
 
+#define RUNMODE_SENSOR 0
+#define RUNMODE_TIMER 1
+
 class SprayState {
 	public:
 		SprayState(Display *displ, int dInletPin = 9, int dOutletPin = 10,
@@ -20,18 +23,22 @@ class SprayState {
 		bool update(int temp, int humi);
 		void printStateText(int line);
 		void printCountdown(int line);
+		void setRunMode(bool runMode);
 		int getHumiThresh();
 		void setHumiThresh(int newVal);
 		int getTempThresh();
 		void setTempThresh(int newVal);
 		int getSprayTime();
 		void setSprayTime(int newVal);
+		int getSprayInterval();
+		void setSprayInterval(int newVal);
 
 	private:
 		Display *_displ;
 		OutputSwitch *_inletSwitch;
 		OutputSwitch *_outletSwitch;
 
+		bool _runMode;
 		int _threshTemp;
 		int _threshHumi;
 		int _sprayTime;
