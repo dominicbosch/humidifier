@@ -112,11 +112,22 @@ void Humidifier::_checkIfPotiChanged(bool stateSwitched) {
 }
 
 void Humidifier::_updateSettingValue() {
-	Serial.println("Updating state");
+	// Serial.println("Updating state");
 	char *buffer = _displ->clearAndGetBufferLine(LINE_SETTING);
-	int newVal;
+	unsigned int newVal;
 
 	switch (_appState->getState()) {
+		case STATE_SET_RUNMODE: // run by sensor or timer
+			_runMode = (_nowPoti < 50) ? RUNMODE_SENSOR : RUNMODE_TIMER;
+			if (_nowPoti < 50) {
+				_runMode = 0;
+				snprintf(buffer, BUFFER_LENGTH, "Sensor Mode");
+			} else {
+				_runMode = 1;
+				snprintf(buffer, BUFFER_LENGTH, "Timer Mode");
+			}
+			_sprayState->setRunMode(_runMode);
+			break;
 		case STATE_SET_TEMP: // temperature setting state
 			newVal = _minTemp + (_maxTemp - _minTemp) * _nowPoti / 100;
 			_sprayState->setTempThresh(newVal);
@@ -135,19 +146,8 @@ void Humidifier::_updateSettingValue() {
 			snprintf(buffer, BUFFER_LENGTH, "Spray %3ds", newVal);
 			// printLCD(_sprayTime, " seconds   ");
 			break;
-		case STATE_SET_RUNMODE: // run by sensor or timer
-			_runMode = (_nowPoti < 50) ? 0 : 1;
-			if (_nowPoti < 50) {
-				_runMode = 0;
-				snprintf(buffer, BUFFER_LENGTH, "Sensor Mode");
-			} else {
-				_runMode = 1;
-				snprintf(buffer, BUFFER_LENGTH, "Timer Mode");
-			}
-			_sprayState->setRunMode(_runMode);
-			break;
 		case STATE_SET_TIMER: // set spray timer
-			_nowTimer = _minTimer + (_maxTimer - _minTimer) * _nowPoti / 100;
+			_nowTimer = _minTimer + (_maxTimer - _minTimer) / 100 * _nowPoti;
 			snprintf(buffer, BUFFER_LENGTH, "Spray every %3ds", _nowTimer);
 			_sprayState->setSprayInterval(_nowTimer);
 			break;
@@ -159,13 +159,17 @@ void Humidifier::_updateSettingValue() {
 // using an average over 10 measurements
 // Returns a value between 0 and 100
 int Humidifier::_readStablePotiValue() {
-	int res = 0;
-	int num = 10;
-	for(int i = 0; i < num; i++) {
+	unsigned long res = 0;
+	byte num = 10;
+	for(byte i = 0; i < num; i++) {
 		res += analogRead(_aPotiPin);
 		delay(1);
 	}
-	// poti values range from 0 to 1023 therefore the last 10 values correspond to 100
-	return 100 - (res / num / 10.13); // we flip the value because of the poti direction (100 - ...)
+
+	// poti values range from 0 to 1023 therefore the first 10 values correspond to 100 and...
+	if ((res / num) < 30) return 100;
+	// the last 10 values correspond to 0
+	if ((res / num) > 993) return 0;
+	return 101 - (res / num) * 100 / 1004;
 }
 

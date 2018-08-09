@@ -33,8 +33,8 @@ class Humidifier {
     bool _runMode = 0;
     int _minTemp = 10;
     int _maxTemp = 40;
-    int _nowTemp = 10;
-    int _nowHumidity = 0;
+    int _nowTemp = 28;
+    int _nowHumidity = 50;
     int _minTimer = 30;
     int _nowTimer = 120;
     int _maxTimer = 600;
