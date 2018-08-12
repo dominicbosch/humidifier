@@ -15,7 +15,7 @@ Humidifier::Humidifier() {
 	_sprayState = new SprayState(_displ);
 	
 	// Humidity & Temperatur sensor:
-	_dht = new DHT(2, DHTTYPE); // Digital Pin D2
+	_dht = new DHT(3, DHTTYPE); // Digital Pin D3
 	_dht->begin();
 	
 	delay(2000);
@@ -73,6 +73,7 @@ void Humidifier::loop() {
 }
 
 void Humidifier::_updateTempAndHumi() {
+	Serial.println("Reading DHT sensor!");
 	int humi = _dht->readHumidity();
 	int temp = _dht->readTemperature();
 
@@ -80,6 +81,8 @@ void Humidifier::_updateTempAndHumi() {
 		Serial.println("Failed to read from DHT sensor!");
 		return;
 	}
+	Serial.println(humi);
+	Serial.println(temp);
 	_nowHumidity = humi;
 	_nowTemp = temp;
 	_printTempAndHumi();

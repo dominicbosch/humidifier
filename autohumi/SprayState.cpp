@@ -64,11 +64,16 @@ void SprayState::printStateText(int line) {
 
 void SprayState::printCountdown(int line) {
   unsigned long nowTime = millis();
+  int eta;
   char *buffer = _displ->clearAndGetBufferLine(line);
   if (_sprayState == SPRAY_STATE_SPRAYING) {
-    snprintf(buffer, BUFFER_LENGTH, "Ends in %3ds", _sprayStart/1000 + _sprayTime - nowTime/1000);
+    eta = _sprayStart/1000 + _sprayTime - nowTime/1000;
+    if (eta < 0) eta = 0;
+    snprintf(buffer, BUFFER_LENGTH, "Ends in %3ds", eta);
   } else if (_sprayState == SPRAY_STATE_FLUSHING) {
-    snprintf(buffer, BUFFER_LENGTH, "Ends in %3ds", _sprayStart/1000 + (_sprayTime+30) - nowTime/1000);
+    eta = _sprayStart/1000 + (_sprayTime+30) - nowTime/1000;
+    if (eta < 0) eta = 0;
+    snprintf(buffer, BUFFER_LENGTH, "Ends in %3ds", eta);
   }
   _displ->printBufferLineAsString(line);
 }

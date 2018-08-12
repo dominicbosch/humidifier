@@ -14,7 +14,7 @@
 
 class Display {
   public:
-    Display(int clockPin = 19, int dataPin = 18);
+    Display(int clockPin = 18, int dataPin = 19);
     char *clearAndGetBufferLine(int line);
     void printBufferLineAsString(int line);
     void printBufferLineAsUTF8(int line);
