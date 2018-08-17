@@ -73,7 +73,6 @@ void Humidifier::loop() {
 }
 
 void Humidifier::_updateTempAndHumi() {
-	Serial.println("Reading DHT sensor!");
 	int humi = _dht->readHumidity();
 	int temp = _dht->readTemperature();
 
@@ -81,8 +80,6 @@ void Humidifier::_updateTempAndHumi() {
 		Serial.println("Failed to read from DHT sensor!");
 		return;
 	}
-	Serial.println(humi);
-	Serial.println(temp);
 	_nowHumidity = humi;
 	_nowTemp = temp;
 	_printTempAndHumi();
