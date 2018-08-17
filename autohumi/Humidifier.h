@@ -30,7 +30,6 @@ class Humidifier {
     AppState *_appState;
     SprayState *_sprayState;
 
-    bool _runMode = 0;
     int _minTemp = 10;
     int _maxTemp = 40;
     int _nowTemp = 28;
@@ -49,6 +48,7 @@ class Humidifier {
     void _printTempAndHumi();
     void _checkIfPotiChanged(bool stateSwitched);
     void _updateSettingValue();
+    void _printSettingValue();
     int _readStablePotiValue();
 };
 

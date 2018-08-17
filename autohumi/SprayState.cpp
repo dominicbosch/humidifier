@@ -26,7 +26,7 @@ bool SprayState::update(int temperature, int humidity) {
   if (_runMode == RUNMODE_SENSOR) {
     startSpray = (temperature > _threshTemp || humidity < _threshHumi);
   } else {
-    startSpray = (abs(nowTime - _sprayStart)/1000 > _sprayInterval);
+    startSpray = (abs(nowTime - _sprayStart)/1000 > _sprayInterval + _sprayTime);
   }
 
   // if we are idle and the thresholds are crossed, we start spraying 
@@ -57,7 +57,7 @@ void SprayState::printStateText(int line) {
   switch (_sprayState) {
     case SPRAY_STATE_SPRAYING: snprintf(buffer, BUFFER_LENGTH, "Spraying!"); break;
     case SPRAY_STATE_FLUSHING: snprintf(buffer, BUFFER_LENGTH, "Flushing!"); break;
-    case SPRAY_STATE_OFF: snprintf(buffer, BUFFER_LENGTH, "Checking Sensors"); break;
+    case SPRAY_STATE_OFF: snprintf(buffer, BUFFER_LENGTH, "Waiting..."); break;
   }
   _displ->printBufferLineAsString(line);
 }
@@ -78,10 +78,13 @@ void SprayState::printCountdown(int line) {
   _displ->printBufferLineAsString(line);
 }
 
-void SprayState::setRunMode(bool runMode) {
-  _runMode = runMode;
+int SprayState::getSprayETA() { 
+  int eta = _sprayInterval + _sprayTime - abs(millis() - _sprayStart)/1000;
+  return (eta < 0) ? 0 : eta;
 }
 
+bool SprayState::getRunMode() { return _runMode; }
+void SprayState::setRunMode(bool runMode) { _runMode = runMode; }
 
 int SprayState::getHumiThresh() { return _threshHumi; }
 void SprayState::setHumiThresh(int newVal) { _threshHumi = newVal; }

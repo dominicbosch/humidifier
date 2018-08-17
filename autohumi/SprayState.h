@@ -23,6 +23,8 @@ class SprayState {
 		bool update(int temp, int humi);
 		void printStateText(int line);
 		void printCountdown(int line);
+		int getSprayETA();
+		bool getRunMode();
 		void setRunMode(bool runMode);
 		int getHumiThresh();
 		void setHumiThresh(int newVal);
